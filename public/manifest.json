@@ -1,0 +1,25 @@
+{
+  "name": "肉速打 NIKUSOKUDA",
+  "short_name": "肉速打",
+  "description": "焼肉スピード計算ゲーム - 京都高級焼肉店 × ゲームセンター",
+  "theme_color": "#1a1008",
+  "background_color": "#1a1008",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
