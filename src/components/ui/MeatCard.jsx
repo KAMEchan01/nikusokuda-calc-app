@@ -27,7 +27,7 @@ function getBorderGlow(ratio) {
   return '0 0 0 2px #dc2626, 0 0 30px rgba(220,38,38,0.7)';
 }
 
-export function MeatCard({ question, timeRatio, questionIdx, levelMeats, currentInput = '' }) {
+export function MeatCard({ question, timeRatio, questionIdx, levelMeats, currentInput = '', reduceMotion = false }) {
   const [shaking, setShaking] = useState(false);
 
   useEffect(() => {
@@ -52,10 +52,10 @@ export function MeatCard({ question, timeRatio, questionIdx, levelMeats, current
     <AnimatePresence mode="wait">
       <motion.div
         key={questionIdx}
-        initial={{ x: 80, opacity: 0, scale: 0.95 }}
+        initial={{ x: reduceMotion ? 0 : 80, opacity: 0, scale: reduceMotion ? 1 : 0.95 }}
         animate={{ x: 0, opacity: 1, scale: 1 }}
-        exit={{ x: -80, opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
+        exit={{ x: reduceMotion ? 0 : -80, opacity: 0, scale: reduceMotion ? 1 : 0.95 }}
+        transition={{ duration: reduceMotion ? 0.1 : 0.2, ease: 'easeOut' }}
         className={`relative w-full rounded-2xl overflow-hidden ${shaking ? 'animate-shake' : ''}`}
         style={{ boxShadow: borderGlow }}
       >

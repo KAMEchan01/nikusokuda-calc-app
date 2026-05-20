@@ -9,6 +9,8 @@ import {
   getTotalSales, getRankFromSales, getNextRank,
   getBestTime, getBestSales, isSecretUnlocked,
   getSoundOn, setSoundOn, getAutoReset, setAutoReset,
+  getReduceMotion, setReduceMotion,
+  clearBestTimes, clearAllData,
 } from '../../utils/storage';
 import LEVELS, { LEVEL_ORDER } from '../../data/levels';
 
@@ -24,6 +26,9 @@ export function HomeScreen({ onStartGame, onZukan }) {
   const [showSettings, setShowSettings] = useState(false);
   const [soundOn, setSoundLocal] = useState(getSoundOn);
   const [autoReset, setAutoResetLocal] = useState(getAutoReset);
+  const [reduceMotion, setReduceMotionLocal] = useState(getReduceMotion);
+  const [confirmTarget, setConfirmTarget] = useState(null); // 'bestTime' | 'allData' | null
+  const [dataVersion, setDataVersion] = useState(0); // force re-read after reset
   const { playSelect } = useSound();
 
   const secretUnlocked = isSecretUnlocked();
@@ -52,6 +57,27 @@ export function HomeScreen({ onStartGame, onZukan }) {
     setAutoResetLocal(next);
     setAutoReset(next);
   }, [autoReset]);
+
+  const handleReduceMotionToggle = useCallback(() => {
+    const next = !reduceMotion;
+    setReduceMotionLocal(next);
+    setReduceMotion(next);
+  }, [reduceMotion]);
+
+  const handleClearBestTimes = useCallback(() => {
+    clearBestTimes();
+    setConfirmTarget(null);
+    setDataVersion(v => v + 1);
+  }, []);
+
+  const handleClearAllData = useCallback(() => {
+    clearAllData();
+    setConfirmTarget(null);
+    setDataVersion(v => v + 1);
+    setSoundLocal(true);
+    setAutoResetLocal(false);
+    setReduceMotionLocal(false);
+  }, []);
 
   const level = LEVELS[selectedLevel];
   const bestTime = getBestTime(selectedLevel);
@@ -249,26 +275,74 @@ export function HomeScreen({ onStartGame, onZukan }) {
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="flex flex-col gap-3 px-4 py-3 rounded-xl bg-black/50 border border-gray-800">
-                <p className="text-gray-400 text-xs font-bold tracking-wider uppercase">設定</p>
+              <div className="flex flex-col gap-4 px-4 py-4 rounded-xl bg-black/50 border border-gray-800">
 
-                <ToggleRow
-                  label="サウンド"
-                  value={soundOn}
-                  onToggle={handleSoundToggle}
-                  description={soundOn ? '🔊 ON' : '🔇 OFF'}
-                />
+                {/* ゲーム設定 */}
+                <div className="flex flex-col gap-3">
+                  <p className="text-gray-600 text-xs font-bold tracking-wider uppercase">ゲーム設定</p>
 
-                <ToggleRow
-                  label="オートリセット"
-                  value={autoReset}
-                  onToggle={handleAutoResetToggle}
-                  description={autoReset ? '⚡ ON (1ミス即終了)' : '🛡️ OFF'}
-                />
+                  <ToggleRow
+                    label="効果音"
+                    value={soundOn}
+                    onToggle={handleSoundToggle}
+                    description={soundOn ? '🔊 ON' : '🔇 OFF'}
+                  />
+                  <ToggleRow
+                    label="オートリセット"
+                    value={autoReset}
+                    onToggle={handleAutoResetToggle}
+                    description={autoReset ? '⚡ ON (1ミス即終了)' : '🛡️ OFF'}
+                  />
+                  <ToggleRow
+                    label="アニメーション省略"
+                    value={reduceMotion}
+                    onToggle={handleReduceMotionToggle}
+                    description={reduceMotion ? '⚡ 軽量モード' : '✨ フルエフェクト'}
+                  />
+                </div>
 
-                <div className="text-center">
-                  <p className="text-gray-600 text-xs">肉速打 ver 1.0</p>
-                  <p className="text-gray-700 text-xs">京都高級焼肉 × ゲームセンター</p>
+                <div className="h-px bg-gray-800" />
+
+                {/* データ管理 */}
+                <div className="flex flex-col gap-3">
+                  <p className="text-gray-600 text-xs font-bold tracking-wider uppercase">データ管理</p>
+
+                  {/* ベストタイムリセット */}
+                  {confirmTarget === 'bestTime' ? (
+                    <ConfirmRow
+                      message="全レベルのベストタイムを削除しますか？"
+                      onConfirm={handleClearBestTimes}
+                      onCancel={() => setConfirmTarget(null)}
+                    />
+                  ) : (
+                    <ActionRow
+                      label="ベストタイムをリセット"
+                      description="全レベルのベストタイムを削除"
+                      color="#f59e0b"
+                      onClick={() => { setConfirmTarget(null); setConfirmTarget('bestTime'); }}
+                    />
+                  )}
+
+                  {/* 全データ削除 */}
+                  {confirmTarget === 'allData' ? (
+                    <ConfirmRow
+                      message="ランク・図鑑・記録をすべて削除します。元に戻せません。"
+                      onConfirm={handleClearAllData}
+                      onCancel={() => setConfirmTarget(null)}
+                      danger
+                    />
+                  ) : (
+                    <ActionRow
+                      label="全データを削除"
+                      description="ランク・図鑑・すべての記録をリセット"
+                      color="#ef4444"
+                      onClick={() => { setConfirmTarget(null); setConfirmTarget('allData'); }}
+                    />
+                  )}
+                </div>
+
+                <div className="text-center pt-1">
+                  <p className="text-gray-700 text-xs">肉速打 ver 1.0　京都高級焼肉 × ゲームセンター</p>
                 </div>
               </div>
             </motion.div>
@@ -298,6 +372,48 @@ function ToggleRow({ label, value, onToggle, description }) {
           }`}
         />
       </button>
+    </div>
+  );
+}
+
+function ActionRow({ label, description, color, onClick }) {
+  return (
+    <button
+      className="w-full flex items-center justify-between py-2 active:opacity-70 transition-opacity"
+      onPointerDown={(e) => { e.preventDefault(); onClick(); }}
+    >
+      <div className="text-left">
+        <p className="text-sm font-bold" style={{ color }}>{label}</p>
+        <p className="text-gray-600 text-xs">{description}</p>
+      </div>
+      <span className="text-gray-600 text-lg">›</span>
+    </button>
+  );
+}
+
+function ConfirmRow({ message, onConfirm, onCancel, danger = false }) {
+  return (
+    <div className="flex flex-col gap-2 py-1 px-3 rounded-lg bg-gray-900/60 border border-gray-700">
+      <p className="text-xs text-gray-300 leading-snug pt-1">{message}</p>
+      <div className="flex gap-2 pb-1">
+        <button
+          className="flex-1 py-2 rounded-lg text-xs font-black active:scale-95 transition-all"
+          style={{
+            background: danger ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)',
+            border: `1px solid ${danger ? 'rgba(239,68,68,0.5)' : 'rgba(245,158,11,0.5)'}`,
+            color: danger ? '#ef4444' : '#f59e0b',
+          }}
+          onPointerDown={(e) => { e.preventDefault(); onConfirm(); }}
+        >
+          削除する
+        </button>
+        <button
+          className="flex-1 py-2 rounded-lg text-xs font-black text-gray-400 bg-gray-800 active:scale-95 transition-all"
+          onPointerDown={(e) => { e.preventDefault(); onCancel(); }}
+        >
+          キャンセル
+        </button>
+      </div>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameLoop, GAME_STATUS } from '../../hooks/useGameLoop';
 import { useSound } from '../../hooks/useSound';
+import { getReduceMotion } from '../../utils/storage';
 import { MeatCard } from '../ui/MeatCard';
 import { Numpad } from '../ui/Numpad';
 import { ComboDisplay } from '../ui/ComboDisplay';
@@ -35,6 +36,7 @@ export function GameScreen({ levelId, onGameEnd, onHome }) {
   const hasStarted = useRef(false);
   const [currentInput, setCurrentInput] = useState('');
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [reduceMotion] = useState(() => getReduceMotion());
 
   // Start game on mount
   useEffect(() => {
@@ -107,19 +109,21 @@ export function GameScreen({ levelId, onGameEnd, onHome }) {
       style={{ background: 'linear-gradient(180deg, #1a1008 0%, #0d0804 100%)' }}
     >
       {/* Fire glow background for combos */}
-      <AnimatePresence>
-        {fireIntensity > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: fireIntensity }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: `radial-gradient(ellipse at 50% 100%, rgba(249,115,22,0.5) 0%, transparent 70%)`,
-            }}
-          />
-        )}
-      </AnimatePresence>
+      {!reduceMotion && (
+        <AnimatePresence>
+          {fireIntensity > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: fireIntensity }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: `radial-gradient(ellipse at 50% 100%, rgba(249,115,22,0.5) 0%, transparent 70%)`,
+              }}
+            />
+          )}
+        </AnimatePresence>
+      )}
 
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2 z-10">
@@ -184,12 +188,12 @@ export function GameScreen({ levelId, onGameEnd, onHome }) {
       <div className="flex-1 flex flex-col px-3 gap-2 min-h-0 z-10">
         {/* Grade flash */}
         <div className="h-14 flex items-center justify-center">
-          <GradeDisplay lastGrade={lastGrade} />
+          <GradeDisplay lastGrade={lastGrade} reduceMotion={reduceMotion} />
         </div>
 
         {/* Combo display */}
         <div className="h-12 flex items-center justify-center">
-          <ComboDisplay comboDisplay={comboDisplay} combo={combo} />
+          <ComboDisplay comboDisplay={comboDisplay} combo={combo} reduceMotion={reduceMotion} />
         </div>
 
         {/* Meat card */}
@@ -202,6 +206,7 @@ export function GameScreen({ levelId, onGameEnd, onHome }) {
                 questionIdx={currentIdx}
                 levelMeats={level?.meats || ['牛タン']}
                 currentInput={currentInput}
+                reduceMotion={reduceMotion}
               />
             </div>
           )}

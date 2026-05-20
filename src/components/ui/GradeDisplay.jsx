@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { GRADE_CONFIG, GRADES } from '../../utils/score';
 
-export function GradeDisplay({ lastGrade }) {
+export function GradeDisplay({ lastGrade, reduceMotion = false }) {
   const [visible, setVisible] = useState(false);
   const [current, setCurrent] = useState(null);
   const [key, setKey] = useState(0);
@@ -38,13 +38,13 @@ export function GradeDisplay({ lastGrade }) {
       {visible && (
         <motion.div
           key={key}
-          initial={{ opacity: 0, scale: 0.3, y: -10 }}
-          animate={{ opacity: 1, scale: 1.1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.8, y: -20 }}
-          transition={{
-            enter: { duration: 0.2, ease: [0.34, 1.56, 0.64, 1] },
-            exit: { duration: 0.3 },
-          }}
+          initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.3, y: reduceMotion ? 0 : -10 }}
+          animate={{ opacity: 1, scale: reduceMotion ? 1 : 1.1, y: 0 }}
+          exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.8, y: reduceMotion ? 0 : -20 }}
+          transition={reduceMotion
+            ? { duration: 0.1 }
+            : { enter: { duration: 0.2, ease: [0.34, 1.56, 0.64, 1] }, exit: { duration: 0.3 } }
+          }
           className="flex flex-col items-center pointer-events-none"
         >
           <div

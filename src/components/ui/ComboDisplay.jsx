@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-export function ComboDisplay({ comboDisplay, combo }) {
+export function ComboDisplay({ comboDisplay, combo, reduceMotion = false }) {
   const [visible, setVisible] = useState(false);
   const [key, setKey] = useState(0);
 
@@ -29,14 +29,14 @@ export function ComboDisplay({ comboDisplay, combo }) {
       {visible && (
         <motion.div
           key={key}
-          initial={{ opacity: 0, scale: 0.4, y: -20 }}
+          initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.4, y: reduceMotion ? 0 : -20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.7, y: -10 }}
-          transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+          exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.7, y: reduceMotion ? 0 : -10 }}
+          transition={{ duration: reduceMotion ? 0.1 : 0.3, ease: [0.34, 1.56, 0.64, 1] }}
           className="flex flex-col items-center pointer-events-none"
         >
           {/* Fire particles */}
-          <FireParticles intensity={intensity} />
+          {!reduceMotion && <FireParticles intensity={intensity} />}
 
           {/* Label */}
           <div

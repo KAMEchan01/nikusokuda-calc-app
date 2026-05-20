@@ -13,7 +13,10 @@ const KEYS = {
   secretUnlocked: `${PREFIX}secretUnlocked`,
   soundOn: `${PREFIX}soundOn`,
   autoReset: `${PREFIX}autoReset`,
+  reduceMotion: `${PREFIX}reduceMotion`,
 };
+
+const ALL_LEVEL_IDS = [1, 2, 3, 4, 5, 'secret'];
 
 function get(key, defaultVal = null) {
   try {
@@ -151,6 +154,27 @@ export function getAutoReset() {
 
 export function setAutoReset(val) {
   set(KEYS.autoReset, val);
+}
+
+export function getReduceMotion() {
+  return get(KEYS.reduceMotion, false);
+}
+
+export function setReduceMotion(val) {
+  set(KEYS.reduceMotion, val);
+}
+
+// Data reset helpers
+export function clearBestTimes() {
+  ALL_LEVEL_IDS.forEach(level => {
+    localStorage.removeItem(KEYS.bestTime(level));
+  });
+}
+
+export function clearAllData() {
+  Object.keys(localStorage)
+    .filter(key => key.startsWith(PREFIX))
+    .forEach(key => localStorage.removeItem(key));
 }
 
 export default {
