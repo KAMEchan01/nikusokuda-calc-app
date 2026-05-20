@@ -11,7 +11,7 @@ import { ComboDisplay } from '../ui/ComboDisplay';
 import { GradeDisplay } from '../ui/GradeDisplay';
 import { GRADES } from '../../utils/score';
 
-export function GameScreen({ levelId, onGameEnd }) {
+export function GameScreen({ levelId, onGameEnd, onHome }) {
   const {
     status,
     currentQuestion,
@@ -27,12 +27,14 @@ export function GameScreen({ levelId, onGameEnd }) {
     level,
     startGame,
     submitAnswer,
+    abortGame,
   } = useGameLoop(levelId);
 
   const { playCorrect, playWrong, playBurn, playCombo } = useSound();
   const prevGradeRef = useRef(null);
   const hasStarted = useRef(false);
   const [currentInput, setCurrentInput] = useState('');
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // Start game on mount
   useEffect(() => {
@@ -79,6 +81,19 @@ export function GameScreen({ levelId, onGameEnd }) {
     setCurrentInput(val);
   }, []);
 
+  const handleCancelPress = useCallback(() => {
+    setShowCancelDialog(true);
+  }, []);
+
+  const handleCancelConfirm = useCallback(() => {
+    abortGame();
+    onHome();
+  }, [abortGame, onHome]);
+
+  const handleCancelDecline = useCallback(() => {
+    setShowCancelDialog(false);
+  }, []);
+
   const levelColor = level?.color || '#f97316';
   const isPlaying = status === GAME_STATUS.PLAYING;
   const platesLeft = totalQuestions - answers.length;
@@ -108,7 +123,16 @@ export function GameScreen({ levelId, onGameEnd }) {
 
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2 z-10">
-        <div className="flex flex-col">
+        {/* Cancel button */}
+        <button
+          className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-800/80 text-gray-400 active:scale-90 transition-all"
+          onPointerDown={(e) => { e.preventDefault(); handleCancelPress(); }}
+          aria-label="ゲームをやめる"
+        >
+          <span className="text-lg leading-none">✕</span>
+        </button>
+
+        <div className="flex flex-col items-center">
           <span className="text-xs text-amber-500/70 font-bold tracking-wider uppercase">
             {level?.name}
           </span>
@@ -189,10 +213,75 @@ export function GameScreen({ levelId, onGameEnd }) {
         <Numpad
           onSubmit={handleSubmit}
           onInputChange={handleInputChange}
-          disabled={!isPlaying}
+          disabled={!isPlaying || showCancelDialog}
           resetKey={currentIdx}
         />
       </div>
+
+      {/* Cancel confirmation dialog */}
+      <AnimatePresence>
+        {showCancelDialog && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="absolute inset-0 z-50 flex items-center justify-center px-6"
+            style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="w-full max-w-xs rounded-2xl overflow-hidden"
+              style={{
+                background: 'linear-gradient(160deg, #2d1810, #1a1008)',
+                border: '1.5px solid rgba(245,158,11,0.3)',
+                boxShadow: '0 0 40px rgba(0,0,0,0.8)',
+              }}
+            >
+              {/* Dialog header */}
+              <div className="px-6 pt-6 pb-4 text-center">
+                <span className="text-4xl">🍖</span>
+                <h2 className="text-white font-black text-xl mt-2">ゲームをやめますか？</h2>
+                <p className="text-gray-400 text-sm mt-1.5 leading-snug">
+                  途中でやめると<br />
+                  <span className="text-red-400 font-bold">記録は保存されません</span>
+                </p>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-amber-900/40 mx-4" />
+
+              {/* Buttons */}
+              <div className="flex flex-col gap-3 px-5 py-5">
+                <button
+                  className="w-full py-4 rounded-xl text-base font-black text-white active:scale-95 transition-all"
+                  style={{
+                    background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+                    boxShadow: '0 4px 16px rgba(220,38,38,0.4)',
+                  }}
+                  onPointerDown={(e) => { e.preventDefault(); handleCancelConfirm(); }}
+                >
+                  やめてホームへ戻る
+                </button>
+                <button
+                  className="w-full py-4 rounded-xl text-base font-black active:scale-95 transition-all"
+                  style={{
+                    background: 'rgba(245,158,11,0.15)',
+                    border: '1.5px solid rgba(245,158,11,0.5)',
+                    color: '#f59e0b',
+                  }}
+                  onPointerDown={(e) => { e.preventDefault(); handleCancelDecline(); }}
+                >
+                  続ける
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

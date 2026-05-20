@@ -94,6 +94,7 @@ export default function App() {
             <GameScreen
               levelId={selectedLevel}
               onGameEnd={handleGameEnd}
+              onHome={handleHome}
             />
           </motion.div>
         )}

@@ -352,6 +352,7 @@ export function useGameLoop(levelId) {
     level,
     startGame,
     submitAnswer,
+    abortGame: clearTimers,
   };
 }
 
