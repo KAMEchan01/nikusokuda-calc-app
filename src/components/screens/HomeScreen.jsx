@@ -89,6 +89,7 @@ export function HomeScreen({ onStartGame, onZukan }) {
   ];
 
   return (
+    <>
     <div
       className="flex flex-col h-full w-full overflow-y-auto no-scrollbar"
       style={{ background: 'linear-gradient(180deg, #1a1008 0%, #0d0804 100%)' }}
@@ -266,32 +267,74 @@ export function HomeScreen({ onStartGame, onZukan }) {
           </button>
         </div>
 
-        {/* Settings panel */}
-        <AnimatePresence>
-          {showSettings && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="flex flex-col gap-4 px-4 py-4 rounded-xl bg-black/50 border border-gray-800">
+      </div>
+    </div>
 
-                {/* ゲーム設定 */}
-                <div className="flex flex-col gap-3">
-                  <p className="text-gray-600 text-xs font-bold tracking-wider uppercase">ゲーム設定</p>
+    {/* Settings Modal - Bottom Sheet */}
+    <AnimatePresence>
+      {showSettings && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40"
+            style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(2px)' }}
+            onPointerDown={() => { setShowSettings(false); setConfirmTarget(null); }}
+          />
 
+          {/* Sheet */}
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 32, stiffness: 320 }}
+            className="fixed bottom-0 left-0 right-0 z-50 mx-auto rounded-t-3xl overflow-hidden"
+            style={{
+              maxWidth: 480,
+              background: 'linear-gradient(180deg, #2d1810 0%, #1a1008 100%)',
+              borderTop: '1px solid rgba(245,158,11,0.2)',
+              boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
+            }}
+          >
+            {/* Handle bar */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 rounded-full bg-gray-600" />
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pb-3">
+              <h2 className="text-white font-black text-lg">⚙️ 設定</h2>
+              <button
+                className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 active:scale-90 transition-all"
+                onPointerDown={(e) => { e.preventDefault(); setShowSettings(false); setConfirmTarget(null); }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable content */}
+            <div className="px-5 pb-10 flex flex-col gap-5 overflow-y-auto" style={{ maxHeight: '70vh' }}>
+
+              {/* ゲーム設定 */}
+              <div className="flex flex-col">
+                <p className="text-gray-500 text-xs font-bold tracking-wider uppercase mb-2">ゲーム設定</p>
+                <div className="flex flex-col rounded-xl overflow-hidden border border-gray-800">
                   <ToggleRow
                     label="効果音"
                     value={soundOn}
                     onToggle={handleSoundToggle}
                     description={soundOn ? '🔊 ON' : '🔇 OFF'}
+                    bordered
                   />
                   <ToggleRow
                     label="オートリセット"
                     value={autoReset}
                     onToggle={handleAutoResetToggle}
-                    description={autoReset ? '⚡ ON (1ミス即終了)' : '🛡️ OFF'}
+                    description={autoReset ? '⚡ ON（1ミス即終了）' : '🛡️ OFF'}
+                    bordered
                   />
                   <ToggleRow
                     label="アニメーション省略"
@@ -300,14 +343,12 @@ export function HomeScreen({ onStartGame, onZukan }) {
                     description={reduceMotion ? '⚡ 軽量モード' : '✨ フルエフェクト'}
                   />
                 </div>
+              </div>
 
-                <div className="h-px bg-gray-800" />
-
-                {/* データ管理 */}
-                <div className="flex flex-col gap-3">
-                  <p className="text-gray-600 text-xs font-bold tracking-wider uppercase">データ管理</p>
-
-                  {/* ベストタイムリセット */}
+              {/* データ管理 */}
+              <div className="flex flex-col">
+                <p className="text-gray-500 text-xs font-bold tracking-wider uppercase mb-2">データ管理</p>
+                <div className="flex flex-col rounded-xl overflow-hidden border border-gray-800">
                   {confirmTarget === 'bestTime' ? (
                     <ConfirmRow
                       message="全レベルのベストタイムを削除しますか？"
@@ -319,14 +360,13 @@ export function HomeScreen({ onStartGame, onZukan }) {
                       label="ベストタイムをリセット"
                       description="全レベルのベストタイムを削除"
                       color="#f59e0b"
-                      onClick={() => { setConfirmTarget(null); setConfirmTarget('bestTime'); }}
+                      onClick={() => setConfirmTarget('bestTime')}
+                      bordered
                     />
                   )}
-
-                  {/* 全データ削除 */}
                   {confirmTarget === 'allData' ? (
                     <ConfirmRow
-                      message="ランク・図鑑・記録をすべて削除します。元に戻せません。"
+                      message="ランク・図鑑・記録をすべて削除します。この操作は元に戻せません。"
                       onConfirm={handleClearAllData}
                       onCancel={() => setConfirmTarget(null)}
                       danger
@@ -336,20 +376,19 @@ export function HomeScreen({ onStartGame, onZukan }) {
                       label="全データを削除"
                       description="ランク・図鑑・すべての記録をリセット"
                       color="#ef4444"
-                      onClick={() => { setConfirmTarget(null); setConfirmTarget('allData'); }}
+                      onClick={() => setConfirmTarget('allData')}
                     />
                   )}
                 </div>
-
-                <div className="text-center pt-1">
-                  <p className="text-gray-700 text-xs">肉速打 ver 1.0　京都高級焼肉 × ゲームセンター</p>
-                </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
+
+              <p className="text-center text-gray-700 text-xs pb-2">肉速打 ver 1.0　京都高級焼肉 × ゲームセンター</p>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+    </>
   );
 }
 
