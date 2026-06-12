@@ -13,6 +13,9 @@ import { GradeDisplay } from '../ui/GradeDisplay';
 import { GRADES } from '../../utils/score';
 
 export function GameScreen({ levelId, onGameEnd, onHome }) {
+  const [reduceMotion] = useState(() => getReduceMotion());
+  const [challenge100] = useState(() => getChallenge100());
+
   const {
     status,
     currentQuestion,
@@ -36,8 +39,6 @@ export function GameScreen({ levelId, onGameEnd, onHome }) {
   const hasStarted = useRef(false);
   const [currentInput, setCurrentInput] = useState('');
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [reduceMotion] = useState(() => getReduceMotion());
-  const [challenge100] = useState(() => getChallenge100());
 
   // Start game on mount
   useEffect(() => {
