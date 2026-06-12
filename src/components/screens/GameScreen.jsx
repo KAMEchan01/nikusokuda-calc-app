@@ -5,7 +5,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameLoop, GAME_STATUS } from '../../hooks/useGameLoop';
 import { useSound } from '../../hooks/useSound';
-import { getReduceMotion } from '../../utils/storage';
+import { getReduceMotion, getChallenge100 } from '../../utils/storage';
 import { MeatCard } from '../ui/MeatCard';
 import { Numpad } from '../ui/Numpad';
 import { ComboDisplay } from '../ui/ComboDisplay';
@@ -29,7 +29,7 @@ export function GameScreen({ levelId, onGameEnd, onHome }) {
     startGame,
     submitAnswer,
     abortGame,
-  } = useGameLoop(levelId);
+  } = useGameLoop(levelId, { challenge100 });
 
   const { playCorrect, playWrong, playBurn, playCombo } = useSound();
   const prevGradeRef = useRef(null);
@@ -37,6 +37,7 @@ export function GameScreen({ levelId, onGameEnd, onHome }) {
   const [currentInput, setCurrentInput] = useState('');
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [reduceMotion] = useState(() => getReduceMotion());
+  const [challenge100] = useState(() => getChallenge100());
 
   // Start game on mount
   useEffect(() => {
@@ -186,6 +187,16 @@ export function GameScreen({ levelId, onGameEnd, onHome }) {
 
       {/* Main game area */}
       <div className="flex-1 flex flex-col px-3 gap-2 min-h-0 z-10">
+        {/* Challenge100 badge */}
+        {challenge100 && (
+          <div className="flex justify-center pb-1">
+            <span className="text-xs font-black tracking-widest px-3 py-1 rounded-full"
+              style={{ background: 'rgba(168,85,247,0.2)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.4)' }}>
+              ⏱ 100秒チャレンジ
+            </span>
+          </div>
+        )}
+
         {/* Grade flash */}
         <div className="h-14 flex items-center justify-center">
           <GradeDisplay lastGrade={lastGrade} reduceMotion={reduceMotion} />

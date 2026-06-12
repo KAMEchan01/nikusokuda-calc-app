@@ -27,7 +27,7 @@ function getBorderGlow(ratio) {
   return '0 0 0 2px #dc2626, 0 0 30px rgba(220,38,38,0.7)';
 }
 
-export function MeatCard({ question, timeRatio, questionIdx, levelMeats, currentInput = '', reduceMotion = false }) {
+export function MeatCard({ question, timeRatio, questionIdx, levelMeats, currentInput = '', reduceMotion = false, challenge100 = false }) {
   const [shaking, setShaking] = useState(false);
 
   useEffect(() => {
@@ -108,13 +108,13 @@ export function MeatCard({ question, timeRatio, questionIdx, levelMeats, current
           </div>
         </div>
 
-        {/* Timer bar at bottom */}
+        {/* Timer bar at bottom — hidden in challenge100 mode */}
         <div className="relative h-2 bg-gray-900 rounded-b-2xl overflow-hidden">
           <div
             className="h-full transition-all duration-100 ease-linear rounded-b-2xl"
             style={{
-              width: timerWidth,
-              backgroundColor: timerColor,
+              width: challenge100 ? '100%' : timerWidth,
+              backgroundColor: challenge100 ? '#1f2937' : timerColor,
               boxShadow: `0 0 8px ${timerColor}`,
             }}
           />

@@ -10,6 +10,7 @@ import {
   getBestTime, getBestSales, isSecretUnlocked,
   getSoundOn, setSoundOn, getAutoReset, setAutoReset,
   getReduceMotion, setReduceMotion,
+  getChallenge100, setChallenge100,
   clearBestTimes, clearAllData,
 } from '../../utils/storage';
 import LEVELS, { LEVEL_ORDER } from '../../data/levels';
@@ -27,6 +28,7 @@ export function HomeScreen({ onStartGame, onZukan }) {
   const [soundOn, setSoundLocal] = useState(getSoundOn);
   const [autoReset, setAutoResetLocal] = useState(getAutoReset);
   const [reduceMotion, setReduceMotionLocal] = useState(getReduceMotion);
+  const [challenge100, setChallenge100Local] = useState(getChallenge100);
   const [confirmTarget, setConfirmTarget] = useState(null); // 'bestTime' | 'allData' | null
   const [dataVersion, setDataVersion] = useState(0); // force re-read after reset
   const { playSelect } = useSound();
@@ -64,6 +66,12 @@ export function HomeScreen({ onStartGame, onZukan }) {
     setReduceMotion(next);
   }, [reduceMotion]);
 
+  const handleChallenge100Toggle = useCallback(() => {
+    const next = !challenge100;
+    setChallenge100Local(next);
+    setChallenge100(next);
+  }, [challenge100]);
+
   const handleClearBestTimes = useCallback(() => {
     clearBestTimes();
     setConfirmTarget(null);
@@ -77,6 +85,7 @@ export function HomeScreen({ onStartGame, onZukan }) {
     setSoundLocal(true);
     setAutoResetLocal(false);
     setReduceMotionLocal(false);
+    setChallenge100Local(false);
   }, []);
 
   const level = LEVELS[selectedLevel];
@@ -341,6 +350,13 @@ export function HomeScreen({ onStartGame, onZukan }) {
                     value={reduceMotion}
                     onToggle={handleReduceMotionToggle}
                     description={reduceMotion ? '⚡ 軽量モード' : '✨ フルエフェクト'}
+                    bordered
+                  />
+                  <ToggleRow
+                    label="100秒チャレンジ"
+                    value={challenge100}
+                    onToggle={handleChallenge100Toggle}
+                    description={challenge100 ? '⏱ 20問を100秒で！' : '⏰ 通常（1問5秒）'}
                   />
                 </div>
               </div>

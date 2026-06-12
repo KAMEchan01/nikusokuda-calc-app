@@ -24,7 +24,7 @@ export const GAME_STATUS = {
   GAME_OVER: 'game_over',
 };
 
-export function useGameLoop(levelId) {
+export function useGameLoop(levelId, { challenge100 = false } = {}) {
   const level = LEVELS[levelId];
 
   // State
@@ -163,6 +163,13 @@ export function useGameLoop(levelId) {
   }, [levelId, finishGame]);
 
   const startQuestionTimer = useCallback(() => {
+    // 100秒チャレンジモード：問題ごとの制限時間なし
+    if (challenge100) {
+      questionStartRef.current = Date.now();
+      setQuestionTimeLeft(QUESTION_TIME_LIMIT);
+      return;
+    }
+
     if (questionTimerRef.current) clearInterval(questionTimerRef.current);
 
     questionStartRef.current = Date.now();
@@ -180,7 +187,7 @@ export function useGameLoop(levelId) {
         handleBurnt();
       }
     }, TICK);
-  }, [handleBurnt]);
+  }, [handleBurnt, challenge100]);
 
   const startGlobalTimer = useCallback(() => {
     if (globalTimerRef.current) clearInterval(globalTimerRef.current);

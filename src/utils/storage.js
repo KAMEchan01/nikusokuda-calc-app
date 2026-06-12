@@ -14,6 +14,7 @@ const KEYS = {
   soundOn: `${PREFIX}soundOn`,
   autoReset: `${PREFIX}autoReset`,
   reduceMotion: `${PREFIX}reduceMotion`,
+  challenge100: `${PREFIX}challenge100`,
 };
 
 const ALL_LEVEL_IDS = [1, 2, 3, 4, 5, 'secret'];
@@ -162,6 +163,14 @@ export function getReduceMotion() {
 
 export function setReduceMotion(val) {
   set(KEYS.reduceMotion, val);
+}
+
+export function getChallenge100() {
+  return get(KEYS.challenge100, false);
+}
+
+export function setChallenge100(val) {
+  set(KEYS.challenge100, val);
 }
 
 // Data reset helpers
