@@ -24,7 +24,7 @@ export const LEVELS = {
     perfectSales: 2000,
     emoji: "🌶️",
     color: "#ef4444",
-    negativeRate: 0.3,
+    negativeRate: 0,
     carryRate: 0.8,
   },
   3: {
@@ -52,7 +52,7 @@ export const LEVELS = {
     perfectSales: 8000,
     emoji: "🥩",
     color: "#f97316",
-    negativeRate: 0.3,
+    negativeRate: 0,
     carryRate: 0.9,
   },
   5: {
@@ -66,7 +66,7 @@ export const LEVELS = {
     perfectSales: 10000,
     emoji: "🔥",
     color: "#a855f7",
-    negativeRate: 0.3,
+    negativeRate: 0,
     carryRate: 0.9,
   },
   secret: {
