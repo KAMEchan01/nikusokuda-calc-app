@@ -101,10 +101,9 @@ function generateOne(type, negativeRate = 0.3, carryRate = 0.9) {
  * @param {number} carryRate - 0~1, probability of carry/borrow
  * @returns {Array} array of question objects
  */
-export function generateQuestions(types, negativeRate = 0.3, carryRate = 0.9) {
+export function generateQuestions(types, negativeRate = 0.3, carryRate = 0.9, count = 20) {
   const questions = [];
   const seenPairs = new Set();
-  const count = 20;
   const maxAttempts = count * 30;
   let attempts = 0;
 

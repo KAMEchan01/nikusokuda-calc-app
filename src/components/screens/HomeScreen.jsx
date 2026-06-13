@@ -11,6 +11,7 @@ import {
   getSoundOn, setSoundOn, getAutoReset, setAutoReset,
   getReduceMotion, setReduceMotion,
   getChallenge100, setChallenge100,
+  isLevelUnlocked,
   clearBestTimes, clearAllData,
 } from '../../utils/storage';
 import LEVELS, { LEVEL_ORDER } from '../../data/levels';
@@ -23,7 +24,10 @@ function formatTime(ms) {
 }
 
 export function HomeScreen({ onStartGame, onZukan }) {
-  const [selectedLevel, setSelectedLevel] = useState(1);
+  const [selectedLevel, setSelectedLevel] = useState(() => {
+    const unlocked = LEVEL_ORDER.filter(id => isLevelUnlocked(id));
+    return unlocked[unlocked.length - 1] || 1;
+  });
   const [showSettings, setShowSettings] = useState(false);
   const [soundOn, setSoundLocal] = useState(getSoundOn);
   const [autoReset, setAutoResetLocal] = useState(getAutoReset);
@@ -86,14 +90,17 @@ export function HomeScreen({ onStartGame, onZukan }) {
     setAutoResetLocal(false);
     setReduceMotionLocal(false);
     setChallenge100Local(false);
+    setSelectedLevel(1);
   }, []);
 
   const level = LEVELS[selectedLevel];
   const bestTime = getBestTime(selectedLevel);
   const bestSales = getBestSales(selectedLevel);
 
+  const unlockedMainIds = LEVEL_ORDER.filter(id => isLevelUnlocked(id));
+  const nextLockedId = LEVEL_ORDER.find(id => !isLevelUnlocked(id)) ?? null;
   const displayLevels = [
-    ...LEVEL_ORDER.map(id => LEVELS[id]),
+    ...unlockedMainIds.map(id => LEVELS[id]),
     ...(secretUnlocked ? [LEVELS.secret] : []),
   ];
 
@@ -210,6 +217,36 @@ export function HomeScreen({ onStartGame, onZukan }) {
                 </motion.button>
               );
             })}
+
+            {/* Next locked level teaser */}
+            {nextLockedId && !secretUnlocked && (
+              <div className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-800/50 bg-black/20 opacity-50">
+                <span className="text-3xl grayscale">🔒</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-700 font-bold">Lv.{nextLockedId}</span>
+                    <span className="font-black text-sm text-gray-700">？？？？</span>
+                  </div>
+                  <p className="text-gray-700 text-xs">前のステージをパーフェクトクリアで解放</p>
+                </div>
+                <span className="text-gray-700 text-xs">🔒</span>
+              </div>
+            )}
+
+            {/* Secret stage locked teaser (after all 5 levels shown) */}
+            {!nextLockedId && !secretUnlocked && (
+              <div className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-purple-900/30 bg-black/20 opacity-40">
+                <span className="text-3xl">❓</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-purple-900 font-bold animate-pulse">SECRET</span>
+                    <span className="font-black text-sm text-gray-700">？？？？</span>
+                  </div>
+                  <p className="text-gray-700 text-xs">全レベルパーフェクトクリアで解放</p>
+                </div>
+                <span className="text-gray-700 text-xs">🔒</span>
+              </div>
+            )}
           </div>
         </motion.div>
 

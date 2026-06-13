@@ -66,6 +66,8 @@ export function ResultScreen({ gameResult, levelId, onHome, onRetry }) {
     answers = [],
     secretUnlocked = false,
     rankUp = null,
+    nextLevelJustUnlocked = false,
+    nextLevelId = null,
   } = gameResult || {};
 
   // Determine result rank
@@ -150,6 +152,26 @@ export function ResultScreen({ gameResult, levelId, onHome, onRetry }) {
           <p className="text-gray-500 text-xs mt-1">{level?.name}</p>
         </motion.div>
 
+        {/* Next level unlock notification */}
+        <AnimatePresence>
+          {nextLevelJustUnlocked && nextLevelId && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+              className="w-full flex flex-col items-center gap-1 py-3 px-4 rounded-2xl"
+              style={{
+                background: 'linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05))',
+                border: '2px solid rgba(34,197,94,0.4)',
+                boxShadow: '0 0 20px rgba(34,197,94,0.2)',
+              }}
+            >
+              <p className="text-green-400 font-black text-sm tracking-wider">🔓 STAGE UNLOCKED!!</p>
+              <p className="text-white text-xs">LEVEL {nextLevelId} が解放されました！</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Result Grade + Sales */}
         <AnimatePresence>
           {showDetails && (
@@ -182,7 +204,7 @@ export function ResultScreen({ gameResult, levelId, onHome, onRetry }) {
               transition={{ delay: 0.2 }}
               className="w-full grid grid-cols-2 gap-2"
             >
-              <StatCard label="正解率" value={`${accuracy}%`} sub={`${correct}/20問`} />
+              <StatCard label="正解率" value={`${accuracy}%`} sub={`${correct}/${answers.length}問`} />
               <StatCard label="タイム" value={formatTime(totalElapsed)} sub={isPerfect ? '★ベスト登録' : ''} />
               <StatCard label="最高コンボ" value={`x${Math.max(...answers.map((_, i) => {
                 let c = 0;

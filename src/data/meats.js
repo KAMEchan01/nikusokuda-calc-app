@@ -1,5 +1,63 @@
 export const MEATS = {
-  // Level 1 - タン塩
+  // Level 1 - 焼き野菜
+  "玉ねぎ": {
+    emoji: "🧅",
+    description: "甘みが強く、焼くと糖分が凝縮されて絶品の甘さに。焼肉の付け合わせとして定番中の定番。",
+    rarity: "common",
+    level: 1,
+  },
+  "ピーマン": {
+    emoji: "🫑",
+    description: "独特の苦みが肉の旨みを引き立てる。焼くと苦みが和らぎ、甘みが増す不思議な野菜。",
+    rarity: "common",
+    level: 1,
+  },
+  "しいたけ": {
+    emoji: "🍄",
+    description: "旨み成分グアニル酸を豊富に含む和食の王様。焼いて塩で食べると、その芳醇な香りが最大限に引き出される。",
+    rarity: "rare",
+    level: 1,
+  },
+  "エリンギ": {
+    emoji: "🍄",
+    description: "コリコリとした独特の食感が人気のキノコ。焼くとジューシーになり、肉に負けない存在感を発揮。",
+    rarity: "common",
+    level: 1,
+  },
+  "キャベツ": {
+    emoji: "🥬",
+    description: "焼肉の口直しとして欠かせない野菜。さっぱりとした味わいが脂っこい肉との相性抜群。",
+    rarity: "common",
+    level: 1,
+  },
+
+  // Level 2 - キムチ
+  "白菜キムチ": {
+    emoji: "🌶️",
+    description: "辛みと酸味が絶妙にマッチした発酵食品。焼肉と一緒に食べると食欲がさらに増す最強の相棒。",
+    rarity: "common",
+    level: 2,
+  },
+  "カクテキ": {
+    emoji: "🌶️",
+    description: "大根を使ったキムチ。コリコリした食感と辛みが特徴。白菜キムチとは異なるさっぱりとした味わい。",
+    rarity: "common",
+    level: 2,
+  },
+  "オイキムチ": {
+    emoji: "🥒",
+    description: "きゅうりを使った夏の定番キムチ。みずみずしい食感と爽やかな辛みが特徴。さっぱりとした一品。",
+    rarity: "rare",
+    level: 2,
+  },
+  "キムチ盛り合わせ": {
+    emoji: "🍱",
+    description: "白菜・カクテキ・オイキムチなど数種類を盛り合わせた贅沢プレート。各キムチの味の違いを楽しめる。",
+    rarity: "rare",
+    level: 2,
+  },
+
+  // Level 3 - タン塩
   "牛タン": {
     emoji: "🥩",
     description: "牛の舌肉。塩で食べると旨みが口中に広がる、焼肉の定番中の定番。厚切りで焼くと絶品。",

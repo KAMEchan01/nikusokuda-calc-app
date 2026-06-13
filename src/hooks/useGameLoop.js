@@ -9,12 +9,12 @@ import {
   saveBestTime, saveBestSales, addTotalSales,
   unlockMeats, isSecretUnlocked, unlockSecret,
   getAutoReset, getRankFromSales, getTotalSales,
+  getLevelPerfectCleared, setLevelPerfectCleared, areAllLevelsPerfectCleared,
 } from '../utils/storage';
 import LEVELS from '../data/levels';
 
-const QUESTION_TIME_LIMIT = 5000; // ms per question
-const TOTAL_TIME_LIMIT = 100000;  // 100s total (default)
-const QUESTIONS_PER_GAME = 20;
+const QUESTION_TIME_LIMIT = 5000; // ms per question (normal mode)
+const TOTAL_TIME_LIMIT = 100000;  // 100s total for all levels
 
 export const GAME_STATUS = {
   IDLE: 'idle',
@@ -26,12 +26,13 @@ export const GAME_STATUS = {
 
 export function useGameLoop(levelId, { challenge100 = false } = {}) {
   const level = LEVELS[levelId];
+  const questCount = level?.questionCount || 20;
 
   // State
   const [status, setStatus] = useState(GAME_STATUS.IDLE);
   const [questions, setQuestions] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [answers, setAnswers] = useState([]); // {correct, timeMs, grade, earned}
+  const [answers, setAnswers] = useState([]);
   const [totalSales, setTotalSales] = useState(0);
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
@@ -68,17 +69,24 @@ export function useGameLoop(levelId, { challenge100 = false } = {}) {
     statusRef.current = GAME_STATUS.GAME_OVER;
     setStatus(GAME_STATUS.GAME_OVER);
 
+    const qCount = level?.questionCount || 20;
     const correct = answersArray.filter(a => a.correct).length;
-    const accuracy = Math.round((correct / QUESTIONS_PER_GAME) * 100);
+    const accuracy = Math.round((correct / qCount) * 100);
     const finalSales = answersArray.reduce((sum, a) => sum + (a.earned || 0), 0);
-    const isPerfect = correct === QUESTIONS_PER_GAME;
+    const isPerfect = correct === qCount;
     const totalElapsed = elapsed;
 
-    // Save records
+    // Save records & level clear
+    const wasAlreadyCleared = getLevelPerfectCleared(levelId);
     if (isPerfect) {
       saveBestTime(levelId, totalElapsed);
+      setLevelPerfectCleared(levelId);
     }
     saveBestSales(levelId, finalSales);
+
+    // Next level just unlocked?
+    const nextLevelJustUnlocked =
+      isPerfect && !wasAlreadyCleared && typeof levelId === 'number' && levelId < 5;
 
     // Update cumulative sales and check rank
     const prevTotal = getTotalSales();
@@ -92,15 +100,15 @@ export function useGameLoop(levelId, { challenge100 = false } = {}) {
     }
 
     // Unlock meats for levels played
-    const levelMeats = level.meats || [];
+    const levelMeats = level?.meats || [];
     const newUnlocked = unlockMeats(levelMeats);
     setNewlyUnlocked(newUnlocked);
 
-    // Check secret stage unlock: level 5, all correct, time < 100s
-    let secretUnlocked = false;
-    if (levelId === 5 && isPerfect && totalElapsed < 100000 && !isSecretUnlocked()) {
+    // Secret unlock: all levels 1-5 perfect cleared
+    let secretUnlockedNow = false;
+    if (isPerfect && !isSecretUnlocked() && areAllLevelsPerfectCleared()) {
       unlockSecret();
-      secretUnlocked = true;
+      secretUnlockedNow = true;
       setSecretJustUnlocked(true);
     }
 
@@ -115,8 +123,10 @@ export function useGameLoop(levelId, { challenge100 = false } = {}) {
       totalElapsed,
       isPerfect,
       answers: answersArray,
-      secretUnlocked,
+      secretUnlocked: secretUnlockedNow,
       rankUp,
+      nextLevelJustUnlocked,
+      nextLevelId: nextLevelJustUnlocked ? levelId + 1 : null,
     });
   }, [levelId, level, clearTimers]);
 
@@ -144,15 +154,14 @@ export function useGameLoop(levelId, { challenge100 = false } = {}) {
     setAllCorrectUnder2s(false);
 
     if (autoReset) {
-      // End game immediately
       const elapsed = Date.now() - globalStartRef.current;
       finishGame(answersRef.current, elapsed);
       return;
     }
 
-    // Move to next question or end
     const nextIdx = currentIdxRef.current + 1;
-    if (nextIdx >= QUESTIONS_PER_GAME) {
+    const qCount = level?.questionCount || 20;
+    if (nextIdx >= qCount) {
       const elapsed = Date.now() - globalStartRef.current;
       finishGame(answersRef.current, elapsed);
     } else {
@@ -160,7 +169,7 @@ export function useGameLoop(levelId, { challenge100 = false } = {}) {
       setCurrentIdx(nextIdx);
       startQuestionTimer();
     }
-  }, [levelId, finishGame]);
+  }, [levelId, level, finishGame]);
 
   const startQuestionTimer = useCallback(() => {
     // 100秒チャレンジモード：問題ごとの制限時間なし
@@ -195,14 +204,13 @@ export function useGameLoop(levelId, { challenge100 = false } = {}) {
     globalStartRef.current = Date.now();
     setGlobalElapsed(0);
 
-    const timeLimit = level.timeLimit ? level.timeLimit * 1000 : TOTAL_TIME_LIMIT;
     const TICK = 100;
 
     globalTimerRef.current = setInterval(() => {
       const elapsed = Date.now() - globalStartRef.current;
       setGlobalElapsed(elapsed);
 
-      if (elapsed >= timeLimit) {
+      if (elapsed >= TOTAL_TIME_LIMIT) {
         clearInterval(globalTimerRef.current);
         globalTimerRef.current = null;
         if (statusRef.current === GAME_STATUS.PLAYING) {
@@ -210,15 +218,16 @@ export function useGameLoop(levelId, { challenge100 = false } = {}) {
         }
       }
     }, TICK);
-  }, [level, finishGame]);
+  }, [finishGame]);
 
   // Start the game
   const startGame = useCallback(() => {
     clearTimers();
 
-    const negativeRate = level.negativeRate ?? 0.3;
-    const carryRate = level.carryRate ?? 0.9;
-    const qs = generateQuestions(level.types, negativeRate, carryRate);
+    const qCount = level?.questionCount || 20;
+    const negativeRate = level?.negativeRate ?? 0.3;
+    const carryRate = level?.carryRate ?? 0.9;
+    const qs = generateQuestions(level.types, negativeRate, carryRate, qCount);
 
     answersRef.current = [];
     comboRef.current = 0;
@@ -244,7 +253,6 @@ export function useGameLoop(levelId, { challenge100 = false } = {}) {
     statusRef.current = GAME_STATUS.PLAYING;
     setStatus(GAME_STATUS.PLAYING);
 
-    // Start timers
     setTimeout(() => {
       startGlobalTimer();
       startQuestionTimer();
@@ -303,13 +311,11 @@ export function useGameLoop(levelId, { challenge100 = false } = {}) {
     setAnswers([...answersRef.current]);
     setLastGrade({ grade, timeMs, isCorrect });
 
-    // Clear question timer
     if (questionTimerRef.current) {
       clearInterval(questionTimerRef.current);
       questionTimerRef.current = null;
     }
 
-    // Auto-reset on wrong answer
     const autoReset = getAutoReset() || (levelId === 'secret');
     if (!isCorrect && autoReset) {
       const elapsed = Date.now() - globalStartRef.current;
@@ -318,7 +324,8 @@ export function useGameLoop(levelId, { challenge100 = false } = {}) {
     }
 
     const nextIdx = currentIdxRef.current + 1;
-    if (nextIdx >= QUESTIONS_PER_GAME) {
+    const qCount = level?.questionCount || 20;
+    if (nextIdx >= qCount) {
       const elapsed = Date.now() - globalStartRef.current;
       finishGame(answersRef.current, elapsed);
     } else {
@@ -341,7 +348,7 @@ export function useGameLoop(levelId, { challenge100 = false } = {}) {
     status,
     currentQuestion,
     currentIdx,
-    totalQuestions: QUESTIONS_PER_GAME,
+    totalQuestions: questCount,
     answers,
     totalSales,
     combo,

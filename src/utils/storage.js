@@ -15,6 +15,7 @@ const KEYS = {
   autoReset: `${PREFIX}autoReset`,
   reduceMotion: `${PREFIX}reduceMotion`,
   challenge100: `${PREFIX}challenge100`,
+  perfectCleared: (level) => `${PREFIX}perfectCleared_${level}`,
 };
 
 const ALL_LEVEL_IDS = [1, 2, 3, 4, 5, 'secret'];
@@ -171,6 +172,25 @@ export function getChallenge100() {
 
 export function setChallenge100(val) {
   set(KEYS.challenge100, val);
+}
+
+// Level perfect clear tracking
+export function getLevelPerfectCleared(levelId) {
+  return get(KEYS.perfectCleared(levelId), false);
+}
+
+export function setLevelPerfectCleared(levelId) {
+  set(KEYS.perfectCleared(levelId), true);
+}
+
+export function areAllLevelsPerfectCleared() {
+  return [1, 2, 3, 4, 5].every(id => getLevelPerfectCleared(id));
+}
+
+export function isLevelUnlocked(levelId) {
+  if (levelId === 1) return true;
+  if (levelId === 'secret') return isSecretUnlocked();
+  return getLevelPerfectCleared(levelId - 1);
 }
 
 // Data reset helpers
