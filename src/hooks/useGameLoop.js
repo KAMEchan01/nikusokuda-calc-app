@@ -270,14 +270,17 @@ export function useGameLoop(levelId, { challenge100 = false } = {}) {
     const parsedInput = parseInt(inputStr, 10);
     const isCorrect = !isNaN(parsedInput) && parsedInput === question.answer;
 
-    const grade = isCorrect ? getGrade(timeMs) : GRADES.BURNT;
+    // challenge100モード: 1問に5秒超かかっても正解はBURNTにしない
+    // グレード・スコア計算用に5000msを上限としてキャップ
+    const gradingTime = challenge100 ? Math.min(timeMs, QUESTION_TIME_LIMIT) : timeMs;
+    const grade = isCorrect ? getGrade(gradingTime) : GRADES.BURNT;
 
     let newCombo = comboRef.current;
     let newAllUnder2s = allUnder2sRef.current;
 
     if (isCorrect) {
       newCombo += 1;
-      if (timeMs > 2000) newAllUnder2s = false;
+      if (gradingTime > 2000) newAllUnder2s = false;
     } else {
       newCombo = 0;
       newAllUnder2s = false;
@@ -290,7 +293,7 @@ export function useGameLoop(levelId, { challenge100 = false } = {}) {
     setMaxCombo(prev => Math.max(prev, newCombo));
 
     const { earned, speedBonus, comboBonus } = isCorrect
-      ? calcScore(timeMs, level.price, newCombo, newAllUnder2s)
+      ? calcScore(gradingTime, level.price, newCombo, newAllUnder2s)
       : { earned: 0, speedBonus: 0, comboBonus: 0 };
 
     totalSalesRef.current += earned;
@@ -309,7 +312,7 @@ export function useGameLoop(levelId, { challenge100 = false } = {}) {
 
     answersRef.current = [...answersRef.current, newAnswer];
     setAnswers([...answersRef.current]);
-    setLastGrade({ grade, timeMs, isCorrect });
+    setLastGrade({ grade, timeMs: gradingTime, isCorrect });
 
     if (questionTimerRef.current) {
       clearInterval(questionTimerRef.current);
@@ -333,7 +336,7 @@ export function useGameLoop(levelId, { challenge100 = false } = {}) {
       setCurrentIdx(nextIdx);
       startQuestionTimer();
     }
-  }, [questions, level, levelId, finishGame, startQuestionTimer]);
+  }, [questions, level, levelId, finishGame, startQuestionTimer, challenge100]);
 
   // Cleanup on unmount
   useEffect(() => {
